@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blog | Cabinet Psihologic Tudor Bocăneală</title>
   <style>
@@ -12,10 +12,49 @@
     .post h3 { margin: 0; }
     .post a { color: #0066cc; text-decoration: none; }
     .post a:hover { text-decoration: underline; }
+    .post img { max-width: 100%; height: auto; margin-top: 10px; }
+    .meta { font-size: 0.9em; color: gray; margin-bottom: 5px; }
   </style>
 </head>
 <body>
   <h1>Blog Cabinet Psihologic Tudor Bocăneală</h1>
-  <p>Nu există încă articole publicate.</p>
+  <div id="blog-posts">Se încarcă postările...</div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+    import { firebaseConfig } from './firebase-config.js';
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const blogPostsDiv = document.getElementById("blog-posts");
+
+    async function loadBlogPosts() {
+      const q = query(collection(db, "blogPosts"), orderBy("data", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        blogPostsDiv.innerHTML = "<p>Nu există încă postări pe blog.</p>";
+        return;
+      }
+
+      blogPostsDiv.innerHTML = "";
+      querySnapshot.forEach(doc => {
+        const post = doc.data();
+        const postElement = document.createElement("div");
+        postElement.classList.add("post");
+
+        postElement.innerHTML = `
+          <h3>${post.titlu}</h3>
+          <div class="meta">Autor: ${post.autor || "Necunoscut"} | Data: ${post.data}</div>
+          ${post.imagine ? `<img src="${post.imagine}" alt="Imagine">` : ""}
+          <p>${post.text}</p>
+        `;
+        blogPostsDiv.appendChild(postElement);
+      });
+    }
+
+    loadBlogPosts();
+  </script>
 </body>
 </html>
